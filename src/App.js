@@ -1,7 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobileMenuOpen && !event.target.closest('.nav-menu') && !event.target.closest('.mobile-menu-toggle')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
+
+  // Close mobile menu on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <div className="app">
       {/* Header */}
@@ -13,14 +47,14 @@ function App() {
             <span className="logo-text">BUXORO<br/>DAVLAT<br/>UNIVERSITETI</span>
           </div>
           
-          <nav className="nav-menu">
-            <a href="#university">UNIVERSITET</a>
-            <a href="#structure">TUZILMA</a>
-            <a href="#activity">FAOLIYAT</a>
-            <a href="#students">TALABALARGA</a>
-            <a href="#admission">QABUL</a>
-            <a href="#news">YANGILIKLAR</a>
-            <a className="sa" href="#open-data">OCHIQ MA'LUMOTLAR</a>
+          <nav className={`nav-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+            <a href="#university" onClick={() => setIsMobileMenuOpen(false)}>UNIVERSITET</a>
+            <a href="#structure" onClick={() => setIsMobileMenuOpen(false)}>TUZILMA</a>
+            <a href="#activity" onClick={() => setIsMobileMenuOpen(false)}>FAOLIYAT</a>
+            <a href="#students" onClick={() => setIsMobileMenuOpen(false)}>TALABALARGA</a>
+            <a href="#admission" onClick={() => setIsMobileMenuOpen(false)}>QABUL</a>
+            <a href="#news" onClick={() => setIsMobileMenuOpen(false)}>YANGILIKLAR</a>
+            <a className="sa" href="#open-data" onClick={() => setIsMobileMenuOpen(false)}>OCHIQ MA'LUMOTLAR</a>
           </nav>
           
           <div className="header-right">
@@ -59,6 +93,15 @@ function App() {
             <div className="search-icon">
               <div className="search"></div>
             </div>
+            <button 
+              className={`mobile-menu-toggle ${isMobileMenuOpen ? 'active' : ''}`}
+              onClick={toggleMobileMenu}
+              aria-label="Toggle mobile menu"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
           </div>
         </div>
       </header>
