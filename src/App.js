@@ -140,6 +140,22 @@ function App() {
         </div>
       </section>
 
+      {/* Employees Section */}
+      <section className="employees" id="employees">
+        <div className="container">
+          <div className="section-header">
+            <h2>Xodimlar</h2>
+            <a href="#all-employees" onClick={(e)=>{
+              e.preventDefault();
+              // Open modal with all employees
+              document.getElementById('employeesModal').style.display = 'block';
+            }}>Barchasini ko'rish</a>
+          </div>
+
+          <EmployeesPreview />
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="stats">
         <div className="container">
@@ -524,112 +540,7 @@ function App() {
       </section>
 
       {/* Announcements Section */}
-      <section className="announcements">
-        <div className="container">
-          <div className="section-header">
-            <h2>E'lonlar</h2>
-            <a href="#all-announcements">Barchasini ko'rish</a>
-          </div>
-          
-          <div className="announcements-list">
-            {announcementsLoading ? (
-              // Loading state
-              Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="announcement-item loading">
-                  <div className="loading-skeleton" style={{ width: '107px', height: '107px', borderRadius: '50%' }}></div>
-                  <div className="announcement-content">
-                    <div className="loading-skeleton" style={{ height: '20px', width: '120px', marginBottom: '10px' }}></div>
-                    <div className="loading-skeleton" style={{ height: '40px', width: '100%', marginBottom: '10px' }}></div>
-                    <div className="loading-skeleton" style={{ height: '20px', width: '150px' }}></div>
-                  </div>
-                </div>
-              ))
-            ) : announcementsError ? (
-              // Error state
-              <div className="error-message">
-                <p>E'lonlarni yuklashda xatolik yuz berdi</p>
-                <button onClick={refreshAnnouncements}>Qayta urinish</button>
-              </div>
-            ) : announcementsData && announcementsData.length > 0 ? (
-              // Real data from API
-              announcementsData.map((announcement, index) => (
-                <div key={announcement.id || index} className="announcement-item">
-                  <img 
-                    src={announcement.author_image || announcement.image || 'logo.png'} 
-                    alt={announcement.author_name || 'Person'} 
-                    onError={(e) => {
-                      e.target.src = 'logo.png';
-                    }}
-                  />
-                  <div className="announcement-content">
-                    <span className="announcement-date">
-                      {announcement.published_date ? 
-                        new Date(announcement.published_date).toLocaleDateString('uz-UZ', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        }) : 
-                        'Yaqinda'
-                      }
-                    </span>
-                    <h3>{announcement.title || 'E\'lon sarlavhasi'}</h3>
-                    <p>{announcement.author_name || announcement.author || 'Muallif'}</p>
-                    {announcement.excerpt && <p className="announcement-excerpt">{announcement.excerpt}</p>}
-                  </div>
-                </div>
-              ))
-            ) : (
-              // Fallback data
-              <>
-            <div className="announcement-item">
-              <img src="logo.png" alt="Person" />
-              <div className="announcement-content">
-                <span className="announcement-date">3-aprel, 2025</span>
-                <h3>filologiya fanlari bo'yicha falsafa doktori (PhD) dissertatsiya ishi h...</h3>
-                <p>Radjabova Dildora Raximovna</p>
-              </div>
-            </div>
-            
-            <div className="announcement-item">
-              <img src="logo.png" alt="Person" />
-              <div className="announcement-content">
-                <span className="announcement-date">3-aprel, 2025</span>
-                <h3>Pedagogika fanlari doktori (DSc) dissertatsiya ishi himoyasi to'g'ris...</h3>
-                <p>Ahmadov Olimjon Shodmonovich</p>
-              </div>
-            </div>
-            
-            <div className="announcement-item">
-              <img src="logo.png" alt="Person" />
-              <div className="announcement-content">
-                <span className="announcement-date">3-aprel, 2025</span>
-                <h3>Pedagogika fanlari doktori (DSc) dissertatsiya ishi himoyasi to'g'ris...</h3>
-                <p>Jurayev Bobomurod Tojiyevich</p>
-              </div>
-            </div>
-            
-            <div className="announcement-item">
-              <img src="logo.png" alt="Person" />
-              <div className="announcement-content">
-                <span className="announcement-date">3-aprel, 2025</span>
-                <h3>Pedagogika fanlari doktori (DSc) dissertatsiya ishi himoyasi to'g'ris...</h3>
-                <p>Adizova Nigora Baxtiyorovna</p>
-              </div>
-            </div>
-            
-            <div className="announcement-item">
-              <img src="logo.png" alt="Person" />
-              <div className="announcement-content">
-                <span className="announcement-date">3-aprel, 2025</span>
-                <h3>filologiya fanlari bo'yicha falsafa doktori (PhD) dissertatsiya ishi h...</h3>
-                <p>Ism Familiya Ochestva</p>
-              </div>
-            </div>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
+      <Announcements />
 
       {/* Links Section */}
       <section className="links">
@@ -755,6 +666,9 @@ function App() {
         </div>
       </footer>
 
+      {/* Employees Modal */}
+      <EmployeesModal />
+
       {/* Search Modal */}
       <div id="searchModal" className="search-modal" style={{ display: 'none' }}>
         <div className="search-modal-content">
@@ -798,6 +712,228 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Employees preview (first 24)
+function EmployeesPreview() {
+  const [employees, setEmployees] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const { results } = await apiService.getEmployeesPage(1, 24);
+        if (isMounted) setEmployees(results);
+      } catch (err) {
+        if (isMounted) setError(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    })();
+    return () => { isMounted = false; };
+  }, []);
+
+  return (
+    <div className="employees-grid">
+      {loading && Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="employee-card loading">
+          <div className="avatar loading-skeleton" />
+          <div className="info">
+            <div className="loading-skeleton" style={{ height: '16px', width: '70%' }} />
+            <div className="loading-skeleton" style={{ height: '14px', width: '50%', marginTop: '8px' }} />
+          </div>
+        </div>
+      ))}
+      {!loading && !error && employees.map((e, i) => (
+        <div key={e.id || i} className="employee-card">
+          <img className="avatar" src={e.image || 'logo.png'} alt={e.full_name || 'Xodim'} onError={(evt)=>{evt.target.src='logo.png';}} />
+          <div className="info">
+            <h4 className="name">{e.full_name || e.name}</h4>
+            <p className="position">{e.position || 'Lavozim'}</p>
+            {e.department && <p className="department">{e.department}</p>}
+          </div>
+        </div>
+      ))}
+      {error && (
+        <div className="error-message" style={{ gridColumn: '1 / -1' }}>
+          <p>Xodimlar yuklashda xatolik yuz berdi</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Employees modal (all)
+function EmployeesModal() {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [employees, setEmployees] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    window.showEmployeesModal = async () => {
+      setIsOpen(true);
+      if (employees.length === 0 && !loading) {
+        try {
+          setLoading(true);
+          const all = await apiService.getAllEmployees(100);
+          setEmployees(all);
+        } catch (err) {
+          setError(err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    return () => { delete window.showEmployeesModal; };
+  }, [employees.length, loading]);
+
+  const close = () => setIsOpen(false);
+
+  if (!isOpen) return null;
+
+  return (
+    <div id="employeesModal" className="search-modal" style={{ display: 'block' }}>
+      <div className="search-modal-content">
+        <div className="search-modal-header">
+          <h2>Barcha xodimlar</h2>
+          <span className="close" onClick={close}>&times;</span>
+        </div>
+        <div className="employees-grid">
+          {loading && Array.from({ length: 24 }).map((_, i) => (
+            <div key={i} className="employee-card loading">
+              <div className="avatar loading-skeleton" />
+              <div className="info">
+                <div className="loading-skeleton" style={{ height: '16px', width: '70%' }} />
+                <div className="loading-skeleton" style={{ height: '14px', width: '50%', marginTop: '8px' }} />
+              </div>
+            </div>
+          ))}
+          {!loading && !error && employees.map((e, i) => (
+            <div key={e.id || i} className="employee-card">
+              <img className="avatar" src={e.image || 'logo.png'} alt={e.full_name || 'Xodim'} onError={(evt)=>{evt.target.src='logo.png';}} />
+              <div className="info">
+                <h4 className="name">{e.full_name || e.name}</h4>
+                <p className="position">{e.position || 'Lavozim'}</p>
+                {e.department && <p className="department">{e.department}</p>}
+              </div>
+            </div>
+          ))}
+          {error && (
+            <div className="error-message" style={{ gridColumn: '1 / -1' }}>
+              <p>Xodimlar yuklashda xatolik yuz berdi</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Announcements with cards, modal and load-all
+function Announcements() {
+  const [items, setItems] = React.useState([]);
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [active, setActive] = React.useState(null);
+
+  const pageSize = 10;
+
+  const loadPage = React.useCallback(async (p) => {
+    try {
+      setLoading(true);
+      const { results, next } = await apiService.getAnnouncementsPage(p, pageSize);
+      setItems(prev => p === 1 ? results : [...prev, ...results]);
+      setHasMore(Boolean(next));
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => { loadPage(1); }, [loadPage]);
+
+  const loadAll = async () => {
+    if (!hasMore) return;
+    let p = page + 1;
+    while (true) {
+      const { results, next } = await apiService.getAnnouncementsPage(p, pageSize);
+      setItems(prev => [...prev, ...results]);
+      setPage(p);
+      if (!next) { setHasMore(false); break; }
+      p += 1;
+    }
+  };
+
+  return (
+    <section className="announcements">
+      <div className="container">
+        <div className="section-header">
+          <h2>E'lonlar</h2>
+          <a href="#all-announcements" onClick={(e)=>{e.preventDefault(); loadAll();}}>Barchasini ko'rish</a>
+        </div>
+
+        <div className="announcements-list">
+          {loading && items.length === 0 && Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="announcement-item loading">
+              <div className="loading-skeleton" style={{ width: '107px', height: '107px', borderRadius: '50%' }}></div>
+              <div className="announcement-content">
+                <div className="loading-skeleton" style={{ height: '20px', width: '120px', marginBottom: '10px' }}></div>
+                <div className="loading-skeleton" style={{ height: '40px', width: '100%', marginBottom: '10px' }}></div>
+                <div className="loading-skeleton" style={{ height: '20px', width: '150px' }}></div>
+              </div>
+            </div>
+          ))}
+
+          {!loading && !error && items.map((a, i) => (
+            <article key={a.id || i} className="announcement-card" onClick={()=>setActive(a)}>
+              <img src={a.img || a.image || 'logo.png'} alt={a.author || 'Muallif'} onError={(e)=>{e.target.src='logo.png';}} />
+              <div className="content">
+                <span className="date">{a.created_at ? 'Yaqinda' : 'Yaqinda'}</span>
+                <h3>{a.title}</h3>
+                <button className="btn" onClick={(e)=>{e.stopPropagation(); setActive(a);}}>Batafsil</button>
+              </div>
+            </article>
+          ))}
+
+          {error && (
+            <div className="error-message" style={{ gridColumn: '1 / -1' }}>
+              <p>E'lonlarni yuklashda xatolik yuz berdi</p>
+            </div>
+          )}
+        </div>
+
+        {hasMore && !loading && (
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <button className="btn" onClick={()=>{ setPage(prev=>prev+1); loadPage(page+1); }}>Yana yuklash</button>
+          </div>
+        )}
+      </div>
+
+      {active && (
+        <div className="search-modal" style={{ display: 'block' }}>
+          <div className="search-modal-content">
+            <div className="search-modal-header">
+              <h2>{active.title}</h2>
+              <span className="close" onClick={()=>setActive(null)}>&times;</span>
+            </div>
+            <div className="announcement-detail">
+              <img src={active.img || active.image || 'logo.png'} alt={active.author || 'Muallif'} onError={(e)=>{e.target.src='logo.png';}} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+              <p className="date">{active.created_at ? new Date(active.created_at).toLocaleDateString('uz-UZ') : 'Yaqinda'}</p>
+              <div className="text" dangerouslySetInnerHTML={{ __html: active.text || '' }} />
+              {active.author && <p className="author">Muallif: {active.author}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

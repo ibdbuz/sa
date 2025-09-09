@@ -126,6 +126,55 @@ export const getAnnouncements = async (page = 1, limit = 5) => {
   return data.results || [];
 };
 
+export const getAnnouncementsPage = async (page = 1, limit = 10) => {
+  const data = await fetchData(`/uz/elon/list/?page=${page}&limit=${limit}`);
+  return {
+    results: data.results || [],
+    count: typeof data.count === 'number' ? data.count : (data.results ? data.results.length : 0),
+    next: data.next || null
+  };
+};
+
+export const getAllAnnouncements = async (batchSize = 50) => {
+  let page = 1;
+  const all = [];
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { results, next } = await getAnnouncementsPage(page, batchSize);
+    all.push(...results);
+    if (!next) break;
+    page += 1;
+  }
+  return all;
+};
+
+// Employees (xodimlar)
+export const getEmployeesPage = async (page = 1, limit = 24) => {
+  const data = await fetchData(`/uz/xodim/list/?page=${page}&limit=${limit}`);
+  return {
+    results: data.results || [],
+    count: typeof data.count === 'number' ? data.count : (data.results ? data.results.length : 0),
+    next: data.next || null
+  };
+};
+
+export const getAllEmployees = async (batchSize = 100) => {
+  let page = 1;
+  const all = [];
+  // Fetch in batches until no next
+  // Try to request larger pages to minimize requests
+  // If server ignores limit, we'll still paginate by page
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    // Some backends use `page` only; we still pass limit for optimization
+    const { results, next } = await getEmployeesPage(page, batchSize);
+    all.push(...results);
+    if (!next) break;
+    page += 1;
+  }
+  return all;
+};
+
 export const getFaculties = async () => {
   return [
     { id: 1, name: "Filologiya fakulteti" },
@@ -179,6 +228,10 @@ const apiService = {
   getUniversityStats,
   getNews,
   getAnnouncements,
+  getAnnouncementsPage,
+  getAllAnnouncements,
+  getEmployeesPage,
+  getAllEmployees,
   getFaculties,
   getContactInfo,
   search
