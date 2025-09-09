@@ -175,7 +175,7 @@ export const search = async (query) => {
   return results;
 };
 
-export default {
+const apiService = {
   getUniversityStats,
   getNews,
   getAnnouncements,
@@ -183,3 +183,5 @@ export default {
   getContactInfo,
   search
 };
+
+export default apiService;

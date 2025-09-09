@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Custom hook for single API calls
 export const useApi = (apiFunction) => {
@@ -6,23 +6,23 @@ export const useApi = (apiFunction) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await apiFunction();
-        setData(result);
-      } catch (err) {
-        setError(err);
-        console.warn('API Error:', err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await apiFunction();
+      setData(result);
+    } catch (err) {
+      setError(err);
+      console.warn('API Error:', err.message);
+    } finally {
+      setLoading(false);
+    }
   }, [apiFunction]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return { data, loading, error };
 };
@@ -35,7 +35,7 @@ export const usePaginatedApi = (apiFunction, page = 1, limit = 10) => {
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
-  const fetchData = async (pageNum = page, limitNum = limit) => {
+  const fetchData = useCallback(async (pageNum = page, limitNum = limit) => {
     try {
       setLoading(true);
       setError(null);
@@ -52,11 +52,11 @@ export const usePaginatedApi = (apiFunction, page = 1, limit = 10) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiFunction, page, limit]);
 
   useEffect(() => {
     fetchData();
-  }, [apiFunction, page, limit]);
+  }, [fetchData]);
 
   const refresh = () => {
     fetchData();
