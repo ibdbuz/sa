@@ -1,3 +1,16 @@
+## Deployment notes
+
+- Netlify is configured to proxy API calls via `/api/*` to `https://buxdu.uz/api/*` using `public/_redirects` and `netlify.toml`.
+- Locally, the app will use `REACT_APP_API_BASE_URL` if set. On Netlify this is set to `/api` so the browser makes same-origin calls (avoids CORS) and Netlify forwards to the real API.
+
+### Environment
+
+Create `.env.local` for local overrides if needed:
+
+```
+REACT_APP_API_BASE_URL=https://buxdu.uz/api
+```
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
