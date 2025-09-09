@@ -896,8 +896,7 @@ function Announcements() {
               <img src={a.img || a.image || 'logo.png'} alt={a.author || 'Muallif'} onError={(e)=>{e.target.src='logo.png';}} />
               <div className="content">
                 <span className="date">{a.created_at ? 'Yaqinda' : 'Yaqinda'}</span>
-                <h3>{a.title}</h3>
-                <button className="btn" onClick={(e)=>{e.stopPropagation(); setActive(a);}}>Batafsil</button>
+                <button className="btn" onClick={(e)=>{e.stopPropagation(); setActive(a);}} aria-label={`Batafsil: ${a.title}`}>Batafsil</button>
               </div>
             </article>
           ))}
@@ -917,11 +916,11 @@ function Announcements() {
       </div>
 
       {active && (
-        <div className="search-modal" style={{ display: 'block' }}>
-          <div className="search-modal-content">
-            <div className="search-modal-header">
-              <h2>{active.title}</h2>
-              <span className="close" onClick={()=>setActive(null)}>&times;</span>
+        <div className="search-modal" style={{ display: 'block', position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 2000, overflowY: 'auto' }}>
+          <div className="search-modal-content" style={{ maxWidth: '900px', margin: '60px auto', background: '#fff', borderRadius: '10px', padding: '20px', position: 'relative' }}>
+            <div className="search-modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <h2 style={{ marginRight: '32px' }}>{active.title}</h2>
+              <button aria-label="Yopish" onClick={()=>setActive(null)} style={{ background: 'transparent', border: 'none', fontSize: '28px', lineHeight: '1', cursor: 'pointer', color: '#111', position: 'absolute', right: '16px', top: '16px' }}>&times;</button>
             </div>
             <div className="announcement-detail">
               <img src={active.img || active.image || 'logo.png'} alt={active.author || 'Muallif'} onError={(e)=>{e.target.src='logo.png';}} style={{ maxWidth: '100%', borderRadius: '8px' }} />

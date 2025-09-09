@@ -1114,13 +1114,8 @@ body {
   display: block;
 }
 
-.announcement-card h3 {
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 10px;
-}
+/* Title hidden on card (only modal shows details) */
+.announcement-card h3 { display: none; }
 
 .announcement-card .btn,
 .announcements .btn {
