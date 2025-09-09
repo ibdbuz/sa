@@ -10,7 +10,6 @@ function App() {
   // API hooks for data fetching - using simple functions
   const { data: universityStats, loading: statsLoading, error: statsError } = useApi(apiService.getUniversityStats);
   const { data: newsData, loading: newsLoading, error: newsError, refresh: refreshNews } = usePaginatedApi(apiService.getNews, 1, 4);
-  const { data: announcementsData, loading: announcementsLoading, error: announcementsError, refresh: refreshAnnouncements } = usePaginatedApi(apiService.getAnnouncements, 1, 5);
   const { data: contactInfo, loading: contactLoading, error: contactError } = useApi(apiService.getContactInfo);
   
   // Search functionality
