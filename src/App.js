@@ -11,11 +11,10 @@ function App() {
   const { data: universityStats, loading: statsLoading, error: statsError } = useApi(apiService.getUniversityStats);
   const { data: newsData, loading: newsLoading, error: newsError, refresh: refreshNews } = usePaginatedApi(apiService.getNews, 1, 4);
   const { data: announcementsData, loading: announcementsLoading, error: announcementsError, refresh: refreshAnnouncements } = usePaginatedApi(apiService.getAnnouncements, 1, 5);
-  const { data: facultiesData, loading: facultiesLoading, error: facultiesError } = useApi(apiService.getFaculties);
   const { data: contactInfo, loading: contactLoading, error: contactError } = useApi(apiService.getContactInfo);
   
   // Search functionality
-  const { query, setQuery, results: searchResults, loading: searchLoading, search, clearSearch } = useSearch(apiService.search);
+  const { results: searchResults, loading: searchLoading, search } = useSearch(apiService.search);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -791,7 +790,7 @@ function App() {
             </div>
           )}
           
-          {query && searchResults && searchResults.length === 0 && !searchLoading && (
+          {searchQuery && searchResults && searchResults.length === 0 && !searchLoading && (
             <div className="no-results">
               <p>Hech qanday natija topilmadi</p>
             </div>
