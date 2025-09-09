@@ -1,11 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import apiService from './services/simpleApi';
+import { useApi, usePaginatedApi, useSearch } from './hooks/useApi';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // API hooks for data fetching - using simple functions
+  const { data: universityStats, loading: statsLoading, error: statsError } = useApi(apiService.getUniversityStats);
+  const { data: newsData, loading: newsLoading, error: newsError, refresh: refreshNews } = usePaginatedApi(apiService.getNews, 1, 4);
+  const { data: announcementsData, loading: announcementsLoading, error: announcementsError, refresh: refreshAnnouncements } = usePaginatedApi(apiService.getAnnouncements, 1, 5);
+  const { data: facultiesData, loading: facultiesLoading, error: facultiesError } = useApi(apiService.getFaculties);
+  const { data: contactInfo, loading: contactLoading, error: contactError } = useApi(apiService.getContactInfo);
+  
+  // Search functionality
+  const { query, setQuery, results: searchResults, loading: searchLoading, search, clearSearch } = useSearch(apiService.search);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  // Handle search
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      search(searchQuery);
+    }
   };
 
   // Close mobile menu when clicking outside
@@ -90,7 +111,7 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="search-icon">
+            <div className="search-icon" onClick={() => document.getElementById('searchModal').style.display = 'block'}>
               <div className="search"></div>
             </div>
             <button 
@@ -124,6 +145,74 @@ function App() {
       <section className="stats">
         <div className="container">
           <div className="stats-grid">
+            {statsLoading ? (
+              // Loading state
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="stat-card loading">
+                  <div className="stat-icon">
+                    <div className="loading-skeleton"></div>
+                  </div>
+                  <div className="stat-number">
+                    <div className="loading-skeleton"></div>
+                  </div>
+                  <div className="stat-label">
+                    <div className="loading-skeleton"></div>
+                  </div>
+                </div>
+              ))
+            ) : statsError ? (
+              // Error state
+              <div className="error-message">
+                <p>Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+                <button onClick={() => window.location.reload()}>Qayta urinish</button>
+              </div>
+            ) : (
+              // Real data from API
+              universityStats ? (
+                <>
+                  <div className="stat-card">
+                    <div className="stat-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <div className="stat-number">{universityStats.founded_year ? `${new Date().getFullYear() - universityStats.founded_year}+` : '25+'}</div>
+                    <div className="stat-label">Yillik tajriba</div>
+                  </div>
+                  
+                  <div className="stat-card">
+                    <div className="stat-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 7H16c-.8 0-1.54.37-2 1l-3 4v2h2l2.54-3.4L16.5 18H20z"/>
+                      </svg>
+                    </div>
+                    <div className="stat-number">{universityStats.total_students ? `${universityStats.total_students}+` : '15000+'}</div>
+                    <div className="stat-label">Talabalar</div>
+                  </div>
+                  
+                  <div className="stat-card">
+                    <div className="stat-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                      </svg>
+                    </div>
+                    <div className="stat-number">{universityStats.total_faculties || '12'}</div>
+                    <div className="stat-label">Fakultetlar</div>
+                  </div>
+                  
+                  <div className="stat-card">
+                    <div className="stat-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                      </svg>
+                    </div>
+                    <div className="stat-number">{universityStats.total_programs ? `${universityStats.total_programs}+` : '50+'}</div>
+                    <div className="stat-label">Mutaxassisliklar</div>
+                  </div>
+                </>
+              ) : (
+                // Fallback data
+                <>
             <div className="stat-card">
               <div className="stat-icon">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -133,6 +222,39 @@ function App() {
               <div className="stat-number">25+</div>
               <div className="stat-label">Yillik tajriba</div>
             </div>
+                  
+                  <div className="stat-card">
+                    <div className="stat-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 7H16c-.8 0-1.54.37-2 1l-3 4v2h2l2.54-3.4L16.5 18H20z"/>
+                      </svg>
+                    </div>
+                    <div className="stat-number">15000+</div>
+                    <div className="stat-label">Talabalar</div>
+                  </div>
+                  
+                  <div className="stat-card">
+                    <div className="stat-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                      </svg>
+                    </div>
+                    <div className="stat-number">12</div>
+                    <div className="stat-label">Fakultetlar</div>
+                  </div>
+                  
+                  <div className="stat-card">
+                    <div className="stat-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                      </svg>
+                    </div>
+                    <div className="stat-number">50+</div>
+                    <div className="stat-label">Mutaxassisliklar</div>
+                  </div>
+                </>
+              )
+            )}
             
             <div className="stat-card">
               <div className="stat-icon">
@@ -176,6 +298,53 @@ function App() {
           </div>
           
           <div className="news-grid">
+            {newsLoading ? (
+              // Loading state
+              Array.from({ length: 4 }).map((_, index) => (
+                <article key={index} className="news-card loading">
+                  <div className="loading-skeleton" style={{ height: '220px', width: '100%' }}></div>
+                  <div className="news-content">
+                    <div className="loading-skeleton" style={{ height: '20px', width: '80px', marginBottom: '10px' }}></div>
+                    <div className="loading-skeleton" style={{ height: '60px', width: '100%' }}></div>
+                  </div>
+                </article>
+              ))
+            ) : newsError ? (
+              // Error state
+              <div className="error-message">
+                <p>Yangiliklarni yuklashda xatolik yuz berdi</p>
+                <button onClick={refreshNews}>Qayta urinish</button>
+              </div>
+            ) : newsData && newsData.length > 0 ? (
+              // Real data from API
+              newsData.map((news, index) => (
+                <article key={news.id || index} className="news-card">
+                  <img 
+                    src={news.image || news.thumbnail || 'logo.png'} 
+                    alt={news.title || 'News'} 
+                    onError={(e) => {
+                      e.target.src = 'logo.png';
+                    }}
+                  />
+                  <div className="news-content">
+                    <span className="news-date">
+                      {news.published_date ? 
+                        new Date(news.published_date).toLocaleDateString('uz-UZ', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        }) : 
+                        'Yaqinda'
+                      }
+                    </span>
+                    <h3>{news.title || 'Yangilik sarlavhasi'}</h3>
+                    {news.excerpt && <p className="news-excerpt">{news.excerpt}</p>}
+                  </div>
+                </article>
+              ))
+            ) : (
+              // Fallback data
+              <>
             <article className="news-card">
               <img src="logo.png" alt="News" />
               <div className="news-content">
@@ -207,6 +376,8 @@ function App() {
                 <h3>Buxoro davlat universitetida "Kelajakka qadam" dasturi bo'yicha bitiruvchi-yoshlar bilan...</h3>
               </div>
             </article>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -362,6 +533,55 @@ function App() {
           </div>
           
           <div className="announcements-list">
+            {announcementsLoading ? (
+              // Loading state
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="announcement-item loading">
+                  <div className="loading-skeleton" style={{ width: '107px', height: '107px', borderRadius: '50%' }}></div>
+                  <div className="announcement-content">
+                    <div className="loading-skeleton" style={{ height: '20px', width: '120px', marginBottom: '10px' }}></div>
+                    <div className="loading-skeleton" style={{ height: '40px', width: '100%', marginBottom: '10px' }}></div>
+                    <div className="loading-skeleton" style={{ height: '20px', width: '150px' }}></div>
+                  </div>
+                </div>
+              ))
+            ) : announcementsError ? (
+              // Error state
+              <div className="error-message">
+                <p>E'lonlarni yuklashda xatolik yuz berdi</p>
+                <button onClick={refreshAnnouncements}>Qayta urinish</button>
+              </div>
+            ) : announcementsData && announcementsData.length > 0 ? (
+              // Real data from API
+              announcementsData.map((announcement, index) => (
+                <div key={announcement.id || index} className="announcement-item">
+                  <img 
+                    src={announcement.author_image || announcement.image || 'logo.png'} 
+                    alt={announcement.author_name || 'Person'} 
+                    onError={(e) => {
+                      e.target.src = 'logo.png';
+                    }}
+                  />
+                  <div className="announcement-content">
+                    <span className="announcement-date">
+                      {announcement.published_date ? 
+                        new Date(announcement.published_date).toLocaleDateString('uz-UZ', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        }) : 
+                        'Yaqinda'
+                      }
+                    </span>
+                    <h3>{announcement.title || 'E\'lon sarlavhasi'}</h3>
+                    <p>{announcement.author_name || announcement.author || 'Muallif'}</p>
+                    {announcement.excerpt && <p className="announcement-excerpt">{announcement.excerpt}</p>}
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Fallback data
+              <>
             <div className="announcement-item">
               <img src="logo.png" alt="Person" />
               <div className="announcement-content">
@@ -406,6 +626,8 @@ function App() {
                 <p>Ism Familiya Ochestva</p>
               </div>
             </div>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -470,10 +692,30 @@ function App() {
               <img  src="lk.png" alt="Logo" />
               </div>
               <h3>Bog'lanish</h3>
+              {contactLoading ? (
+                <div className="loading-skeleton" style={{ height: '20px', width: '200px', marginBottom: '10px' }}></div>
+              ) : contactError ? (
+                <>
+                  <p>(+998) 65 221-30-46</p>
+                  <p>(+998) 65 221-29-06</p>
+                  <p>buxdu_rektor@buxdu.uz</p>
+                  <p>Buxoro sh. M.Iqbol ko'chasi 11-uy</p>
+                </>
+              ) : contactInfo ? (
+                <>
+                  <p>{contactInfo.phone_1 || '(+998) 65 221-30-46'}</p>
+                  <p>{contactInfo.phone_2 || '(+998) 65 221-29-06'}</p>
+                  <p>{contactInfo.email || 'buxdu_rektor@buxdu.uz'}</p>
+                  <p>{contactInfo.address || 'Buxoro sh. M.Iqbol ko\'chasi 11-uy'}</p>
+                </>
+              ) : (
+                <>
               <p>(+998) 65 221-30-46</p>
               <p>(+998) 65 221-29-06</p>
               <p>buxdu_rektor@buxdu.uz</p>
               <p>Buxoro sh. M.Iqbol ko'chasi 11-uy</p>
+                </>
+              )}
             </div>
             
             <div className="footer-section">
@@ -513,6 +755,49 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Search Modal */}
+      <div id="searchModal" className="search-modal" style={{ display: 'none' }}>
+        <div className="search-modal-content">
+          <div className="search-modal-header">
+            <h2>Qidiruv</h2>
+            <span className="close" onClick={() => document.getElementById('searchModal').style.display = 'none'}>&times;</span>
+          </div>
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="search-input-group">
+              <input
+                type="text"
+                placeholder="Qidiruv so'zini kiriting..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              <button type="submit" className="search-submit-btn">
+                {searchLoading ? 'Qidirilmoqda...' : 'Qidirish'}
+              </button>
+            </div>
+          </form>
+          
+          {searchResults && searchResults.length > 0 && (
+            <div className="search-results">
+              <h3>Qidiruv natijalari:</h3>
+              {searchResults.map((result, index) => (
+                <div key={index} className="search-result-item">
+                  <h4>{result.title || result.name}</h4>
+                  <p>{result.excerpt || result.description}</p>
+                  <span className="result-type">{result.type || 'Ma\'lumot'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {query && searchResults && searchResults.length === 0 && !searchLoading && (
+            <div className="no-results">
+              <p>Hech qanday natija topilmadi</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
